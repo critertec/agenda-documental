@@ -74,12 +74,8 @@
     book: function (data) {
       if (DEMO) {
         var rows = demoLoad();
-        var taken = function (f, s) { return rows.some(function (r) { return r.fecha === f && r.franja === s; }); };
-        if (taken(data.fecha, data.franja) || taken(data.fecha2, data.franja2)) return wait(null).then(function () { throw takenErr('Uno de los horarios acaba de ser reservado por otra persona.'); });
-        var g = uid(), base = Object.assign({ tipo: 'entrevista', actividad: 'Entrevista documental', origen: 'publico', grupo: g }, data);
-        delete base.fecha2; delete base.franja2;
-        rows.push(Object.assign({}, base, { id: uid(), plan: data.plan }));
-        rows.push(Object.assign({}, base, { id: uid(), plan: data.plan === 'A' ? 'B' : 'A', fecha: data.fecha2, franja: data.franja2 }));
+        if (rows.some(function (r) { return r.fecha === data.fecha && r.franja === data.franja; })) return wait(null).then(function () { throw takenErr('Este horario acaba de ser reservado por otra persona.'); });
+        rows.push(Object.assign({ id: uid(), tipo: 'entrevista', actividad: 'Entrevista documental', origen: 'publico' }, data));
         demoSave();
         return wait({ ok: true });
       }
