@@ -99,6 +99,9 @@
           <select id="e-tipo" name="tipo"><option value="entrevista">Entrevista</option><option value="jornada">Jornada de grabación</option></select></div>
         <div class="field"><label for="e-entidad">Entidad</label><input id="e-entidad" name="entidad" list="entidades" required maxlength="120">
           <datalist id="entidades"><option>MINERD</option><option>INFOTEP</option><option>INDOTEL</option><option>Promipyme</option><option>BID</option><option>Critertec</option></datalist></div>
+        <div class="field"><label for="e-plan">Plan <span class="opt">(entrevistas)</span></label>
+          <select id="e-plan" name="plan"><option value="">Sin plan</option><option value="A">Plan A</option><option value="B">Plan B</option></select></div>
+        <div class="field"></div>
         <div class="field"><label for="e-fecha">Fecha</label><select id="e-fecha" name="fecha"></select></div>
         <div class="field"><label for="e-franja">Horario</label><select id="e-franja" name="franja"></select></div>
         <div class="field full"><label for="e-actividad">Actividad <span class="opt">(opcional)</span></label><input id="e-actividad" name="actividad" maxlength="160" placeholder="Ej.: Grabación de jornada en el Politécnico de Santiago"></div>
@@ -181,7 +184,7 @@
     if (!r) return '<button type="button" class="slot free" data-f="' + fecha + '" data-s="' + s.id + '" aria-label="Agregar en ' + SD.longDate(fecha) + ', ' + SD.slotLabel(s.id) + '"><span class="cta">' + SD.ICON.plus + 'Agregar</span></button>';
     var person = [r.nombre, r.apellido].filter(Boolean).join(' ');
     var cls = r.tipo === 'jornada' ? 'slot jor' : 'slot busy team';
-    var k = r.tipo === 'jornada' ? 'Jornada' : 'Entrevista' + (r.origen === 'publico' ? ' · web' : '');
+    var k = r.tipo === 'jornada' ? 'Jornada' : 'Entrevista' + (r.origen === 'publico' ? ' · web' : '') + (r.plan ? '<span class="pl">PLAN ' + SD.esc(r.plan) + '</span>' : '');
     return '<button type="button" class="' + cls + '" data-id="' + SD.esc(r.id) + '"><span class="k">' + k + '</span><span class="t">' + SD.esc(r.entidad) + '</span>' +
       (r.actividad && r.tipo === 'jornada' ? '<span class="s">' + SD.esc(r.actividad) + '</span>' : '') +
       (person ? '<span class="s">' + SD.esc(person) + '</span>' : '') +
@@ -207,7 +210,7 @@
       rows.map(function (r) {
         var i = SD.dayInfo(r.fecha);
         return '<tr data-id="' + SD.esc(r.id) + '"><td>' + i.dowS + ' ' + i.day + '</td><td style="white-space:nowrap">' + SD.esc(SD.slotLabel(r.franja)) + '</td><td>' +
-          (r.tipo === 'jornada' ? '<span class="tag jor">Jornada</span>' : '<span class="tag ent">Entrevista</span>') + (r.origen === 'publico' ? ' <span class="tag pub">Web</span>' : '') +
+          (r.tipo === 'jornada' ? '<span class="tag jor">Jornada</span>' : '<span class="tag ent">Entrevista</span>') + (r.plan ? ' <span class="tag ' + (r.plan === 'A' ? 'pa' : 'pb') + '">Plan ' + SD.esc(r.plan) + '</span>' : '') + (r.origen === 'publico' ? ' <span class="tag pub">Web</span>' : '') +
           '</td><td><strong>' + SD.esc(r.entidad) + '</strong>' + (r.direccion_minerd ? '<br><small>' + SD.esc(r.direccion_minerd) + '</small>' : '') + (r.actividad && r.tipo === 'jornada' ? '<br><small>' + SD.esc(r.actividad) + '</small>' : '') +
           '</td><td>' + SD.esc([r.nombre, r.apellido].filter(Boolean).join(' ')) + (r.cargo ? '<br><small>' + SD.esc(r.cargo) + '</small>' : '') +
           '</td><td style="white-space:nowrap">' + (r.telefono ? '<a href="tel:' + SD.esc(r.telefono.replace(/[^\d+]/g, '')) + '">' + SD.esc(r.telefono) + '</a>' : '') +
@@ -218,14 +221,16 @@
   /* ---------- Modal ---------- */
   $('e-fecha').innerHTML = ALL.map(function (d) { return '<option value="' + d + '">' + SD.longDate(d) + '</option>'; }).join('');
   $('e-franja').innerHTML = SD.SLOTS.map(function (s) { return '<option value="' + s.id + '">' + SD.slotLabel(s.id) + '</option>'; }).join('');
-  var FIELDS = ['tipo', 'entidad', 'fecha', 'franja', 'actividad', 'nombre', 'apellido', 'cargo', 'direccion_minerd', 'telefono', 'email', 'lugar', 'notas'];
+  var FIELDS = ['tipo', 'plan', 'entidad', 'fecha', 'franja', 'actividad', 'nombre', 'apellido', 'cargo', 'direccion_minerd', 'telefono', 'email', 'lugar', 'notas'];
 
   function openEditor(item, fecha, franja) {
     state.editing = item ? item.id : null;
     form.reset(); $('formErr').innerHTML = '';
     var src = item || { tipo: (fecha >= '2026-11-23' ? 'entrevista' : 'jornada'), fecha: fecha, franja: franja };
     FIELDS.forEach(function (f) { if (src[f] != null) form.elements[f].value = src[f]; });
-    $('dlgKicker').textContent = item ? (item.origen === 'publico' ? 'Agendado desde la web' : 'Editar actividad') : 'Nueva actividad';
+    var twin = item && item.grupo ? state.items.filter(function (r) { return r.grupo === item.grupo && r.id !== item.id; })[0] : null;
+    $('dlgKicker').textContent = (item ? (item.origen === 'publico' ? 'Agendado desde la web' : 'Editar actividad') : 'Nueva actividad') +
+      (twin ? ' · Su Plan ' + (twin.plan || '') + ': ' + SD.dayInfo(twin.fecha).dowS + ' ' + SD.dayInfo(twin.fecha).day + ', ' + SD.slotLabel(twin.franja) : '');
     $('dlgTitle').textContent = SD.longDate(form.elements.fecha.value);
     $('dlgSub').textContent = SD.slotLabel(form.elements.franja.value);
     $('del').hidden = !item;
@@ -263,7 +268,7 @@
   $('viewSeg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { state.view = b.dataset.v; render(); } });
   $('refresh').addEventListener('click', function () { load().then(function () { SD.toast('Agenda actualizada'); }); });
   $('csv').addEventListener('click', function () {
-    var cols = ['fecha', 'franja', 'tipo', 'entidad', 'actividad', 'nombre', 'apellido', 'cargo', 'direccion_minerd', 'telefono', 'email', 'lugar', 'notas', 'origen'];
+    var cols = ['fecha', 'franja', 'tipo', 'plan', 'entidad', 'actividad', 'nombre', 'apellido', 'cargo', 'direccion_minerd', 'telefono', 'email', 'lugar', 'notas', 'origen'];
     var csv = '﻿' + cols.join(',') + '\n' + sorted().map(function (r) { return cols.map(function (c) { return '"' + String(c === 'franja' ? SD.slotLabel(r[c]) : (r[c] || '')).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     a.download = 'agenda-documental-soy-digital.csv'; document.body.appendChild(a); a.click(); a.remove();

@@ -74,6 +74,15 @@
       <button type="button" class="m-close" data-close aria-label="Cerrar"></button>
     </div>
     <div class="m-body">
+      <div class="plan">
+        <p class="plan-q">Te pedimos dos horarios posibles. Este horario es tu:</p>
+        <div class="plan-opts" role="radiogroup" aria-label="Plan">
+          <label><input type="radio" name="plan" value="A" checked><span><b>Plan A</b>Mi primera opción</span></label>
+          <label><input type="radio" name="plan" value="B"><span><b>Plan B</b>Mi opción alterna</span></label>
+        </div>
+        <div class="field"><label for="f-otro" id="otroLbl">Elige tu Plan B</label><select id="f-otro" name="otro" required></select>
+          <div class="hint">Solo aparecen los horarios que siguen libres.</div></div>
+      </div>
       <div class="fgrid">
         <div class="field"><label for="f-nombre">Nombre</label><input id="f-nombre" name="nombre" autocomplete="given-name" required maxlength="80"></div>
         <div class="field"><label for="f-apellido">Apellido</label><input id="f-apellido" name="apellido" autocomplete="family-name" required maxlength="80"></div>
@@ -157,11 +166,29 @@
     document.getElementById('dlgTitle').textContent = SD.longDate(state.pick.fecha);
     document.getElementById('dlgSub').textContent = SD.slotLabel(state.pick.franja) + ' · Entrevista documental';
     form.hidden = false; done.hidden = true; document.getElementById('formErr').innerHTML = '';
+    fillOtro();
     form.querySelectorAll('.invalid').forEach(function (x) { x.classList.remove('invalid'); });
     SD.openDialog(dlg);
     setTimeout(function () { document.getElementById('f-nombre').focus(); }, 50);
   });
   dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) SD.closeDialog(dlg); });
+
+  function planVal() { var r = form.querySelector('input[name="plan"]:checked'); return r ? r.value : 'A'; }
+  function fillOtro() {
+    var sel = document.getElementById('f-otro'), prev = sel.value, opts = '<option value="">Elige un horario</option>';
+    DAYS.forEach(function (d) {
+      var i = SD.dayInfo(d), group = '';
+      SD.SLOTS.forEach(function (s) {
+        if (d === state.pick.fecha && s.id === state.pick.franja) return;
+        if (find(d, s.id) || SD.isPast(d, s.id)) return;
+        group += '<option value="' + d + '|' + s.id + '">' + i.dow + ' ' + i.day + ' · ' + SD.slotLabel(s.id) + '</option>';
+      });
+      if (group) opts += '<optgroup label="' + i.dow + ' ' + i.day + ' de noviembre">' + group + '</optgroup>';
+    });
+    sel.innerHTML = opts; sel.value = prev; if (sel.value !== prev) sel.value = '';
+    document.getElementById('otroLbl').textContent = 'Elige tu ' + (planVal() === 'A' ? 'Plan B (opción alterna)' : 'Plan A (primera opción)');
+  }
+  form.querySelectorAll('input[name="plan"]').forEach(function (r) { r.addEventListener('change', fillOtro); });
 
   var inst = document.getElementById('f-inst');
   inst.addEventListener('change', function () {
@@ -173,7 +200,7 @@
     e.preventDefault();
     var err = document.getElementById('formErr'); err.innerHTML = '';
     var v = function (n) { return (form.elements[n].value || '').trim(); };
-    var need = ['nombre', 'apellido', 'inst', 'telefono', 'email', 'lugar'];
+    var need = ['otro', 'nombre', 'apellido', 'inst', 'telefono', 'email', 'lugar'];
     if (inst.value === 'MINERD') need.push('direccion_minerd');
     if (inst.value === 'otra') need.push('otra');
     var bad = [];
@@ -184,15 +211,18 @@
     if (bad.length) { err.innerHTML = '<div class="alert err">Revisa los campos marcados en rojo.</div>'; form.elements[bad[0]].focus(); return; }
     if (!document.getElementById('f-ok').checked) { err.innerHTML = '<div class="alert err">Necesitamos tu autorización para guardar estos datos.</div>'; return; }
 
+    var otro = v('otro').split('|'), plan = planVal();
     var data = {
+      plan: plan, fecha2: otro[0], franja2: otro[1],
       fecha: state.pick.fecha, franja: state.pick.franja, nombre: v('nombre'), apellido: v('apellido'), cargo: v('cargo'),
       entidad: inst.value === 'otra' ? v('otra') : inst.value, direccion_minerd: inst.value === 'MINERD' ? v('direccion_minerd') : '',
       telefono: v('telefono'), email: v('email'), lugar: v('lugar'), notas: v('notas'), website: v('website')
     };
     var btn = document.getElementById('send'); btn.disabled = true; btn.textContent = 'Reservando…';
     SD.api.book(data).then(function () {
-      document.getElementById('doneTxt').innerHTML = 'Te esperamos el <strong>' + SD.esc(SD.longDate(data.fecha)) + '</strong>, de ' + SD.esc(SD.slotLabel(data.franja)) + '. Nuestro equipo te contactará para confirmar los detalles.';
-      form.hidden = true; done.hidden = false; form.reset(); inst.dispatchEvent(new Event('change'));
+      var a = plan === 'A' ? [data.fecha, data.franja] : [data.fecha2, data.franja2], b = plan === 'A' ? [data.fecha2, data.franja2] : [data.fecha, data.franja];
+      document.getElementById('doneTxt').innerHTML = '<strong>Plan A:</strong> ' + SD.esc(SD.longDate(a[0])) + ', ' + SD.esc(SD.slotLabel(a[1])) + '<br><strong>Plan B:</strong> ' + SD.esc(SD.longDate(b[0])) + ', ' + SD.esc(SD.slotLabel(b[1])) + '<br><br>Nuestro equipo te contactará para confirmar cuál de los dos queda. Te enviamos el resumen a tu correo.';
+      form.hidden = true; done.hidden = false; form.reset(); inst.dispatchEvent(new Event('change')); document.getElementById('f-otro').value = '';
       load(true);
     }).catch(function (ex) {
       err.innerHTML = '<div class="alert err">' + SD.esc(ex.message) + (ex.code === 'taken' ? ' Elige otro horario, por favor.' : '') + '</div>';
