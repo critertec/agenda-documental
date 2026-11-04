@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda interna · Documental Soy Digital</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="assets/soydigital-color-tagline.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="topbar">
+      <img src="assets/soydigital-color-tagline.png" alt="Soy Digital">
+      <span class="chip" id="lockChip">Vista interna · Equipo</span>
+    </div>
+    <h1>Agenda del documental</h1>
+    <p class="lead">Entrevistas y jornadas de grabación del 16 al 28 de noviembre. Esta vista tiene datos personales: no compartas el enlace fuera del equipo.</p>
+  </div>
+</header>
+
+<main class="wrap" id="app" hidden>
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Semana" id="weekSeg">
+      <button type="button" data-w="1">16 – 21 nov</button>
+      <button type="button" data-w="2">23 – 28 nov</button>
+    </div>
+    <div class="legend">
+      <span><i class="sw busy"></i>Entrevista</span>
+      <span><i class="sw jor"></i>Jornada de grabación</span>
+      <span><i class="sw free"></i>Libre</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div class="seg" role="group" aria-label="Vista" id="viewSeg">
+        <button type="button" data-v="cal">Calendario</button>
+        <button type="button" data-v="list">Lista</button>
+      </div>
+      <button type="button" class="btn ghost sm" id="refresh">Actualizar</button>
+    </div>
+  </div>
+
+  <div id="calWrap">
+    <div class="days-m" id="daysM" aria-label="Elige un día"></div>
+    <section class="cal loading" id="cal" aria-label="Calendario"></section>
+  </div>
+  <section id="listWrap" hidden>
+    <div class="cal">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--sd-gray-200);flex-wrap:wrap">
+        <strong style="color:var(--sd-navy)" id="listCount"></strong>
+        <button type="button" class="btn ghost sm" id="csv">Descargar CSV</button>
+      </div>
+      <div class="scroll-x" id="list"></div>
+    </div>
+  </section>
+  <div id="loadErr"></div>
+</main>
+
+<div class="wrap lock" id="lock" hidden>
+  <div class="card">
+    <h2>Acceso del equipo</h2>
+    <p style="margin:0 0 14px">Abre esta página con el enlace interno que te compartieron, o escribe la clave del equipo.</p>
+    <form id="lockForm" class="field">
+      <label for="k">Clave del equipo</label>
+      <input id="k" autocomplete="off" spellcheck="false">
+      <div id="lockErr"></div>
+      <button class="btn primary" style="margin-top:14px;width:100%">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="logos">
+      <img src="assets/indotel.png" alt="INDOTEL">
+      <img src="assets/logo-bid.png" alt="BID" style="height:28px">
+      <img src="assets/logo-critertec.png" alt="Critertec">
+      <img src="assets/logo-minerd.png" alt="MINERD">
+    </div>
+    <small>Uso interno · Critertec</small>
+  </div>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form id="form" novalidate>
+    <div class="m-head">
+      <span class="k" id="dlgKicker"></span>
+      <h2 id="dlgTitle"></h2>
+      <p id="dlgSub"></p>
+      <button type="button" class="m-close" data-close aria-label="Cerrar"></button>
+    </div>
+    <div class="m-body">
+      <div class="fgrid">
+        <div class="field"><label for="e-tipo">Tipo</label>
+          <select id="e-tipo" name="tipo"><option value="entrevista">Entrevista</option><option value="jornada">Jornada de grabación</option></select></div>
+        <div class="field"><label for="e-entidad">Entidad</label><input id="e-entidad" name="entidad" list="entidades" required maxlength="120">
+          <datalist id="entidades"><option>MINERD</option><option>INFOTEP</option><option>INDOTEL</option><option>Promipyme</option><option>BID</option><option>Critertec</option></datalist></div>
+        <div class="field"><label for="e-fecha">Fecha</label><select id="e-fecha" name="fecha"></select></div>
+        <div class="field"><label for="e-franja">Horario</label><select id="e-franja" name="franja"></select></div>
+        <div class="field full"><label for="e-actividad">Actividad <span class="opt">(opcional)</span></label><input id="e-actividad" name="actividad" maxlength="160" placeholder="Ej.: Grabación de jornada en el Politécnico de Santiago"></div>
+        <div class="field"><label for="e-nombre">Nombre del contacto <span class="opt">(opcional)</span></label><input id="e-nombre" name="nombre" maxlength="80"></div>
+        <div class="field"><label for="e-apellido">Apellido <span class="opt">(opcional)</span></label><input id="e-apellido" name="apellido" maxlength="80"></div>
+        <div class="field"><label for="e-cargo">Cargo <span class="opt">(opcional)</span></label><input id="e-cargo" name="cargo" maxlength="120"></div>
+        <div class="field"><label for="e-minerd">Dirección del MINERD <span class="opt">(si aplica)</span></label><input id="e-minerd" name="direccion_minerd" maxlength="160"></div>
+        <div class="field"><label for="e-tel">Teléfono <span class="opt">(opcional)</span></label><input id="e-tel" name="telefono" type="tel" maxlength="40"></div>
+        <div class="field"><label for="e-email">Correo <span class="opt">(opcional)</span></label><input id="e-email" name="email" type="email" maxlength="120"></div>
+        <div class="field full"><label for="e-lugar">Lugar / dirección <span class="opt">(opcional)</span></label><input id="e-lugar" name="lugar" maxlength="300"></div>
+        <div class="field full"><label for="e-notas">Notas <span class="opt">(opcional)</span></label><textarea id="e-notas" name="notas" maxlength="600"></textarea></div>
+      </div>
+      <div id="formErr" aria-live="assertive"></div>
+    </div>
+    <div class="m-foot">
+      <button type="button" class="btn danger" id="del" hidden>Eliminar</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn ghost" data-close>Cancelar</button>
+      <button type="submit" class="btn primary" id="save">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  var W1 = SD.range('2026-11-16', '2026-11-21', true), W2 = SD.range('2026-11-23', '2026-11-28', true);
+  var ALL = W1.concat(W2);
+  var state = { week: '1', view: 'cal', day: null, items: [], editing: null };
+  var KEY = '';
+  var $ = function (id) { return document.getElementById(id); };
+  var cal = $('cal'), dlg = $('dlg'), form = $('form');
+  SD.demoBanner();
+  document.querySelectorAll('.m-close').forEach(function (b) { b.innerHTML = SD.ICON.x; });
+
+  // Semana inicial: la que contiene hoy, o la segunda si ya pasó la primera
+  var today = new Date(); var t = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  if (t >= 20261122) state.week = '2';
+
+  /* ---------- Clave ---------- */
+  function readKey() {
+    var m = (location.hash || '').match(/k=([^&]+)/);
+    if (m) {
+      var k = decodeURIComponent(m[1]);
+      try { localStorage.setItem('sd-agenda-key', k); } catch (e) { }
+      history.replaceState(null, '', location.pathname + location.search);
+      return k;
+    }
+    try { return localStorage.getItem('sd-agenda-key') || ''; } catch (e) { return ''; }
+  }
+  function showLock(msg) {
+    $('app').hidden = true; $('lock').hidden = false;
+    $('lockErr').innerHTML = msg ? '<div class="alert err">' + SD.esc(msg) + '</div>' : (SD.api.demo ? '<div class="alert info">Modo demostración: la clave es <strong>demo</strong>.</div>' : '');
+    setTimeout(function () { $('k').focus(); }, 50);
+  }
+  $('lockForm').addEventListener('submit', function (e) {
+    e.preventDefault(); KEY = $('k').value.trim(); if (!KEY) return;
+    try { localStorage.setItem('sd-agenda-key', KEY); } catch (err) { }
+    load();
+  });
+
+  /* ---------- Datos ---------- */
+  function find(f, s) { return state.items.filter(function (r) { return r.fecha === f && r.franja === s; })[0]; }
+  function load(quiet) {
+    if (!KEY) return showLock();
+    return SD.api.getTeam(KEY).then(function (res) {
+      state.items = res.items || [];
+      $('lock').hidden = true; $('app').hidden = false; cal.classList.remove('loading'); $('loadErr').innerHTML = '';
+      render();
+    }).catch(function (ex) {
+      if (/clave/i.test(ex.message)) { try { localStorage.removeItem('sd-agenda-key'); } catch (e) { } KEY = ''; return showLock('La clave no es válida. Pide el enlace actualizado.'); }
+      if (!quiet) $('loadErr').innerHTML = '<div class="alert err">No pudimos cargar la agenda. Revisa tu conexión y pulsa Actualizar.</div>';
+    });
+  }
+
+  /* ---------- Render ---------- */
+  function cell(fecha, s) {
+    var r = find(fecha, s.id);
+    if (!r) return '<button type="button" class="slot free" data-f="' + fecha + '" data-s="' + s.id + '" aria-label="Agregar en ' + SD.longDate(fecha) + ', ' + SD.slotLabel(s.id) + '"><span class="cta">' + SD.ICON.plus + 'Agregar</span></button>';
+    var person = [r.nombre, r.apellido].filter(Boolean).join(' ');
+    var cls = r.tipo === 'jornada' ? 'slot jor' : 'slot busy team';
+    var k = r.tipo === 'jornada' ? 'Jornada' : 'Entrevista' + (r.origen === 'publico' ? ' · web' : '');
+    return '<button type="button" class="' + cls + '" data-id="' + SD.esc(r.id) + '"><span class="k">' + k + '</span><span class="t">' + SD.esc(r.entidad) + '</span>' +
+      (r.actividad && r.tipo === 'jornada' ? '<span class="s">' + SD.esc(r.actividad) + '</span>' : '') +
+      (person ? '<span class="s">' + SD.esc(person) + '</span>' : '') +
+      (r.telefono ? '<span class="s">' + SD.esc(r.telefono) + '</span>' : '') + '</button>';
+  }
+  function render() {
+    var days = state.week === '1' ? W1 : W2;
+    document.querySelectorAll('#weekSeg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.w === state.week); });
+    document.querySelectorAll('#viewSeg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.v === state.view); });
+    $('calWrap').hidden = state.view !== 'cal'; $('listWrap').hidden = state.view !== 'list';
+    $('weekSeg').style.visibility = state.view === 'cal' ? 'visible' : 'hidden';
+    if (state.view === 'cal') {
+      SD.renderGrid(cal, days, cell, state);
+      SD.renderDayPicker($('daysM'), days, state, function (d) { state.day = d; render(); });
+    } else renderList();
+  }
+  function sorted() { return state.items.slice().sort(function (a, b) { return (a.fecha + a.franja).localeCompare(b.fecha + b.franja); }); }
+  function renderList() {
+    var rows = sorted();
+    $('listCount').textContent = rows.length + (rows.length === 1 ? ' actividad agendada' : ' actividades agendadas');
+    if (!rows.length) { $('list').innerHTML = '<div class="empty">Aún no hay nada agendado.</div>'; return; }
+    $('list').innerHTML = '<table class="list"><thead><tr><th>Fecha</th><th>Horario</th><th>Tipo</th><th>Entidad</th><th>Contacto</th><th>Teléfono</th><th>Correo</th><th>Lugar</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var i = SD.dayInfo(r.fecha);
+        return '<tr data-id="' + SD.esc(r.id) + '"><td>' + i.dowS + ' ' + i.day + '</td><td style="white-space:nowrap">' + SD.esc(SD.slotLabel(r.franja)) + '</td><td>' +
+          (r.tipo === 'jornada' ? '<span class="tag jor">Jornada</span>' : '<span class="tag ent">Entrevista</span>') + (r.origen === 'publico' ? ' <span class="tag pub">Web</span>' : '') +
+          '</td><td><strong>' + SD.esc(r.entidad) + '</strong>' + (r.direccion_minerd ? '<br><small>' + SD.esc(r.direccion_minerd) + '</small>' : '') + (r.actividad && r.tipo === 'jornada' ? '<br><small>' + SD.esc(r.actividad) + '</small>' : '') +
+          '</td><td>' + SD.esc([r.nombre, r.apellido].filter(Boolean).join(' ')) + (r.cargo ? '<br><small>' + SD.esc(r.cargo) + '</small>' : '') +
+          '</td><td style="white-space:nowrap">' + (r.telefono ? '<a href="tel:' + SD.esc(r.telefono.replace(/[^\d+]/g, '')) + '">' + SD.esc(r.telefono) + '</a>' : '') +
+          '</td><td>' + (r.email ? '<a href="mailto:' + SD.esc(r.email) + '">' + SD.esc(r.email) + '</a>' : '') + '</td><td>' + SD.esc(r.lugar) + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  /* ---------- Modal ---------- */
+  $('e-fecha').innerHTML = ALL.map(function (d) { return '<option value="' + d + '">' + SD.longDate(d) + '</option>'; }).join('');
+  $('e-franja').innerHTML = SD.SLOTS.map(function (s) { return '<option value="' + s.id + '">' + SD.slotLabel(s.id) + '</option>'; }).join('');
+  var FIELDS = ['tipo', 'entidad', 'fecha', 'franja', 'actividad', 'nombre', 'apellido', 'cargo', 'direccion_minerd', 'telefono', 'email', 'lugar', 'notas'];
+
+  function openEditor(item, fecha, franja) {
+    state.editing = item ? item.id : null;
+    form.reset(); $('formErr').innerHTML = '';
+    var src = item || { tipo: (fecha >= '2026-11-23' ? 'entrevista' : 'jornada'), fecha: fecha, franja: franja };
+    FIELDS.forEach(function (f) { if (src[f] != null) form.elements[f].value = src[f]; });
+    $('dlgKicker').textContent = item ? (item.origen === 'publico' ? 'Agendado desde la web' : 'Editar actividad') : 'Nueva actividad';
+    $('dlgTitle').textContent = SD.longDate(form.elements.fecha.value);
+    $('dlgSub').textContent = SD.slotLabel(form.elements.franja.value);
+    $('del').hidden = !item;
+    SD.openDialog(dlg);
+    setTimeout(function () { $('e-entidad').focus(); }, 50);
+  }
+  ['fecha', 'franja'].forEach(function (n) {
+    form.elements[n].addEventListener('change', function () { $('dlgTitle').textContent = SD.longDate(form.elements.fecha.value); $('dlgSub').textContent = SD.slotLabel(form.elements.franja.value); });
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('#cal .slot, #list tr[data-id]'); if (!b) return;
+    if (b.dataset.id) openEditor(state.items.filter(function (r) { return r.id === b.dataset.id; })[0]);
+    else openEditor(null, b.dataset.f, b.dataset.s);
+  });
+  dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) SD.closeDialog(dlg); });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var item = { id: state.editing || '' };
+    FIELDS.forEach(function (f) { item[f] = (form.elements[f].value || '').trim(); });
+    if (!item.entidad) { $('formErr').innerHTML = '<div class="alert err">Indica la entidad.</div>'; $('e-entidad').focus(); return; }
+    var btn = $('save'); btn.disabled = true; btn.textContent = 'Guardando…';
+    SD.api.save(KEY, item).then(function () { SD.closeDialog(dlg); SD.toast('Guardado'); return load(true); })
+      .catch(function (ex) { $('formErr').innerHTML = '<div class="alert err">' + SD.esc(ex.message) + '</div>'; })
+      .then(function () { btn.disabled = false; btn.textContent = 'Guardar'; });
+  });
+  $('del').addEventListener('click', function () {
+    if (!state.editing || !confirm('¿Eliminar esta actividad? El horario quedará libre otra vez.')) return;
+    SD.api.remove(KEY, state.editing).then(function () { SD.closeDialog(dlg); SD.toast('Eliminado: el horario quedó libre'); return load(true); })
+      .catch(function (ex) { $('formErr').innerHTML = '<div class="alert err">' + SD.esc(ex.message) + '</div>'; });
+  });
+
+  /* ---------- Controles ---------- */
+  $('weekSeg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { state.week = b.dataset.w; state.day = null; render(); } });
+  $('viewSeg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { state.view = b.dataset.v; render(); } });
+  $('refresh').addEventListener('click', function () { load().then(function () { SD.toast('Agenda actualizada'); }); });
+  $('csv').addEventListener('click', function () {
+    var cols = ['fecha', 'franja', 'tipo', 'entidad', 'actividad', 'nombre', 'apellido', 'cargo', 'direccion_minerd', 'telefono', 'email', 'lugar', 'notas', 'origen'];
+    var csv = '﻿' + cols.join(',') + '\n' + sorted().map(function (r) { return cols.map(function (c) { return '"' + String(c === 'franja' ? SD.slotLabel(r[c]) : (r[c] || '')).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'agenda-documental-soy-digital.csv'; document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  KEY = readKey();
+  load();
+  setInterval(function () { if (!document.hidden && !dlg.open && KEY) load(true); }, 60000);
+})();
+</script>
+</body>
+</html>

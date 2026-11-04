@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda tu entrevista · Documental Soy Digital</title>
+<meta name="description" content="Elige un horario para tu entrevista del documental de cierre de Soy Digital, del 23 al 27 de noviembre de 2026.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/soydigital-color-tagline.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="topbar">
+      <img src="assets/soydigital-color-tagline.png" alt="Soy Digital">
+      <span class="chip">Documental de cierre 2026</span>
+    </div>
+    <h1>Agenda tu entrevista para el documental</h1>
+    <p class="lead">Soy Digital cierra el 2026 con un corto documental sobre su impacto en República Dominicana. Elige un horario libre del <strong>23 al 27 de noviembre</strong> y déjanos tus datos. Nosotros vamos hasta tu oficina.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="toolbar">
+    <div class="legend" aria-label="Leyenda">
+      <span><i class="sw free"></i>Disponible: haz clic para agendar</span>
+      <span><i class="sw busy"></i>Ya reservado</span>
+    </div>
+    <span class="chip light" id="count" aria-live="polite"></span>
+  </div>
+
+  <div class="days-m" id="daysM" aria-label="Elige un día"></div>
+  <section class="cal loading" id="cal" aria-label="Calendario de horarios"></section>
+  <div id="loadErr"></div>
+
+  <section class="info" aria-label="Información de la entrevista">
+    <div class="card navy">
+      <h3>¿Cómo será?</h3>
+      <p>Una conversación breve frente a cámara: de 10 a 15 minutos de grabación. No requiere preparación especial.</p>
+    </div>
+    <div class="card">
+      <h3>¿Dónde?</h3>
+      <p>Nos trasladamos a tu oficina. Solo pedimos un espacio tranquilo, como una sala de reuniones o un despacho, para cuidar la imagen y el sonido.</p>
+    </div>
+    <div class="card">
+      <h3>¿Dudas?</h3>
+      <p id="coord"></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="logos">
+      <img src="assets/indotel.png" alt="INDOTEL">
+      <img src="assets/logo-bid.png" alt="BID" style="height:28px">
+      <img src="assets/logo-critertec.png" alt="Critertec">
+      <img src="assets/logo-minerd.png" alt="MINERD">
+    </div>
+    <small>#SoyDigitalRD · Aprendo, conecto, me transformo.</small>
+  </div>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form id="form" novalidate>
+    <div class="m-head">
+      <span class="k">Reservar horario</span>
+      <h2 id="dlgTitle"></h2>
+      <p id="dlgSub"></p>
+      <button type="button" class="m-close" data-close aria-label="Cerrar"></button>
+    </div>
+    <div class="m-body">
+      <div class="fgrid">
+        <div class="field"><label for="f-nombre">Nombre</label><input id="f-nombre" name="nombre" autocomplete="given-name" required maxlength="80"></div>
+        <div class="field"><label for="f-apellido">Apellido</label><input id="f-apellido" name="apellido" autocomplete="family-name" required maxlength="80"></div>
+        <div class="field"><label for="f-inst">Institución</label>
+          <select id="f-inst" name="inst" required>
+            <option value="">Elige una opción</option>
+            <option>MINERD</option><option>INFOTEP</option><option>INDOTEL</option><option>Promipyme</option>
+            <option value="otra">Otra institución</option>
+          </select>
+        </div>
+        <div class="field"><label for="f-cargo">Cargo <span class="opt">(opcional)</span></label><input id="f-cargo" name="cargo" autocomplete="organization-title" maxlength="120"></div>
+        <div class="field full" id="w-otra" hidden><label for="f-otra">Nombre de la institución</label><input id="f-otra" name="otra" autocomplete="organization" maxlength="120"></div>
+        <div class="field full" id="w-minerd" hidden><label for="f-minerd">Dirección del MINERD</label><input id="f-minerd" name="direccion_minerd" maxlength="160" placeholder="Ej.: Dirección de Tecnología Educativa, Regional 10"><div class="hint">El área, dirección o regional del MINERD donde trabajas.</div></div>
+        <div class="field"><label for="f-tel">Teléfono / WhatsApp</label><input id="f-tel" name="telefono" type="tel" autocomplete="tel" required maxlength="40" placeholder="809-000-0000"></div>
+        <div class="field"><label for="f-email">Correo electrónico</label><input id="f-email" name="email" type="email" autocomplete="email" required maxlength="120"></div>
+        <div class="field full"><label for="f-lugar">Dirección donde haremos la entrevista</label><input id="f-lugar" name="lugar" autocomplete="street-address" required maxlength="300" placeholder="Calle, número, edificio, piso y ciudad"></div>
+        <div class="field full"><label for="f-notas">Comentarios <span class="opt">(opcional)</span></label><textarea id="f-notas" name="notas" maxlength="600" placeholder="Algo que debamos saber para llegar o preparar el espacio"></textarea></div>
+      </div>
+      <div class="hp" aria-hidden="true"><label>No llenar <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <label class="consent"><input type="checkbox" id="f-ok" required> <span>Autorizo al equipo de Soy Digital a usar estos datos solo para coordinar la entrevista del documental.</span></label>
+      <div id="formErr" aria-live="assertive"></div>
+    </div>
+    <div class="m-foot">
+      <button type="button" class="btn ghost" data-close>Cancelar</button>
+      <button type="submit" class="btn primary" id="send">Confirmar reserva</button>
+    </div>
+  </form>
+  <div id="done" hidden>
+    <div class="done">
+      <div class="ok"></div>
+      <h2>¡Listo, quedó agendado!</h2>
+      <p id="doneTxt"></p>
+    </div>
+    <div class="m-foot" style="border:0;justify-content:center"><button type="button" class="btn primary" data-close>Volver al calendario</button></div>
+  </div>
+</dialog>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  var DAYS = SD.range('2026-11-23', '2026-11-27', false);
+  var state = { day: null, items: [], loaded: false, pick: null };
+  var cal = document.getElementById('cal'), daysM = document.getElementById('daysM');
+  var dlg = document.getElementById('dlg'), form = document.getElementById('form'), done = document.getElementById('done');
+  var C = SD.cfg.COORDINACION || {};
+  SD.demoBanner();
+  document.querySelectorAll('.m-close').forEach(function (b) { b.innerHTML = SD.ICON.x; });
+  document.querySelector('.done .ok').innerHTML = SD.ICON.check;
+  document.getElementById('coord').innerHTML = 'Escríbele a <strong>' + SD.esc(C.nombre) + '</strong>: <a href="mailto:' + SD.esc(C.email) + '">' + SD.esc(C.email) + '</a> · <a href="tel:' + SD.esc(String(C.telefono || '').replace(/[^\d+]/g, '')) + '">' + SD.esc(C.telefono) + '</a>';
+
+  // En móvil, abrir en el primer día con cupos o en hoy
+  function find(f, s) { return state.items.filter(function (r) { return r.fecha === f && r.franja === s; })[0]; }
+
+  function cell(fecha, s) {
+    var r = find(fecha, s.id);
+    if (r) return '<div class="slot busy" aria-label="Reservado por ' + SD.esc(r.entidad) + '"><span class="k">Reservado</span><span class="t">' + SD.esc(r.entidad) + '</span></div>';
+    if (SD.isPast(fecha, s.id)) return '<div class="slot free past" aria-disabled="true"><span class="k">Cerrado</span></div>';
+    return '<button type="button" class="slot free" data-f="' + fecha + '" data-s="' + s.id + '" aria-label="Agendar ' + SD.longDate(fecha) + ', ' + SD.slotLabel(s.id) + '"><span class="k">Disponible</span><span class="cta">' + SD.ICON.plus + 'Agendar</span></button>';
+  }
+  function render() {
+    SD.renderGrid(cal, DAYS, cell, state);
+    SD.renderDayPicker(daysM, DAYS, state, function (d) { state.day = d; render(); });
+    var free = 0;
+    DAYS.forEach(function (d) { SD.SLOTS.forEach(function (s) { if (!find(d, s.id) && !SD.isPast(d, s.id)) free++; }); });
+    document.getElementById('count').textContent = state.loaded ? free + (free === 1 ? ' horario disponible' : ' horarios disponibles') : 'Cargando horarios…';
+  }
+  function load(quiet) {
+    return SD.api.getPublic().then(function (res) {
+      state.items = res.items || []; state.loaded = true;
+      cal.classList.remove('loading'); document.getElementById('loadErr').innerHTML = '';
+      render();
+    }).catch(function () {
+      if (!quiet) document.getElementById('loadErr').innerHTML = '<div class="alert err">No pudimos cargar los horarios. Revisa tu conexión y recarga la página.</div>';
+    });
+  }
+
+  cal.addEventListener('click', function (e) {
+    var b = e.target.closest('button.slot.free'); if (!b) return;
+    state.pick = { fecha: b.dataset.f, franja: b.dataset.s };
+    document.getElementById('dlgTitle').textContent = SD.longDate(state.pick.fecha);
+    document.getElementById('dlgSub').textContent = SD.slotLabel(state.pick.franja) + ' · Entrevista documental';
+    form.hidden = false; done.hidden = true; document.getElementById('formErr').innerHTML = '';
+    form.querySelectorAll('.invalid').forEach(function (x) { x.classList.remove('invalid'); });
+    SD.openDialog(dlg);
+    setTimeout(function () { document.getElementById('f-nombre').focus(); }, 50);
+  });
+  dlg.addEventListener('click', function (e) { if (e.target.closest('[data-close]') || e.target === dlg) SD.closeDialog(dlg); });
+
+  var inst = document.getElementById('f-inst');
+  inst.addEventListener('change', function () {
+    document.getElementById('w-minerd').hidden = inst.value !== 'MINERD';
+    document.getElementById('w-otra').hidden = inst.value !== 'otra';
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = document.getElementById('formErr'); err.innerHTML = '';
+    var v = function (n) { return (form.elements[n].value || '').trim(); };
+    var need = ['nombre', 'apellido', 'inst', 'telefono', 'email', 'lugar'];
+    if (inst.value === 'MINERD') need.push('direccion_minerd');
+    if (inst.value === 'otra') need.push('otra');
+    var bad = [];
+    form.querySelectorAll('.invalid').forEach(function (x) { x.classList.remove('invalid'); });
+    need.forEach(function (n) { if (!v(n)) bad.push(n); });
+    if (v('email') && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('email'))) bad.push('email');
+    bad.forEach(function (n) { form.elements[n].closest('.field').classList.add('invalid'); });
+    if (bad.length) { err.innerHTML = '<div class="alert err">Revisa los campos marcados en rojo.</div>'; form.elements[bad[0]].focus(); return; }
+    if (!document.getElementById('f-ok').checked) { err.innerHTML = '<div class="alert err">Necesitamos tu autorización para guardar estos datos.</div>'; return; }
+
+    var data = {
+      fecha: state.pick.fecha, franja: state.pick.franja, nombre: v('nombre'), apellido: v('apellido'), cargo: v('cargo'),
+      entidad: inst.value === 'otra' ? v('otra') : inst.value, direccion_minerd: inst.value === 'MINERD' ? v('direccion_minerd') : '',
+      telefono: v('telefono'), email: v('email'), lugar: v('lugar'), notas: v('notas'), website: v('website')
+    };
+    var btn = document.getElementById('send'); btn.disabled = true; btn.textContent = 'Reservando…';
+    SD.api.book(data).then(function () {
+      document.getElementById('doneTxt').innerHTML = 'Te esperamos el <strong>' + SD.esc(SD.longDate(data.fecha)) + '</strong>, de ' + SD.esc(SD.slotLabel(data.franja)) + '. Nuestro equipo te contactará para confirmar los detalles.';
+      form.hidden = true; done.hidden = false; form.reset(); inst.dispatchEvent(new Event('change'));
+      load(true);
+    }).catch(function (ex) {
+      err.innerHTML = '<div class="alert err">' + SD.esc(ex.message) + (ex.code === 'taken' ? ' Elige otro horario, por favor.' : '') + '</div>';
+      if (ex.code === 'taken') load(true);
+    }).then(function () { btn.disabled = false; btn.textContent = 'Confirmar reserva'; });
+  });
+
+  render(); load();
+  setInterval(function () { if (!document.hidden && !dlg.open) load(true); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) load(true); });
+})();
+</script>
+</body>
+</html>
