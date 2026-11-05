@@ -11,6 +11,19 @@
     { id: '14-16', a: '2:00', b: '4:00 p. m.' },
     { id: '16-18', a: '4:00', b: '6:00 p. m.' }
   ];
+  // Horarios extra que solo ve el equipo
+  var TEAM_SLOTS = [{ id: '06-08', a: '6:00', b: '8:00 a. m.' }].concat(SLOTS, [
+    { id: '18-21', a: '6:00', b: '9:00 p. m.' },
+    { id: '21-23', a: '9:00', b: '11:00 p. m.' }
+  ]);
+  var TYPES = [
+    { id: 'entrevista', label: 'Entrevista', cls: 'busy team' },
+    { id: 'jornada', label: 'Jornada de grabación', cls: 'jor' },
+    { id: 'traslado', label: 'Traslado', cls: 'tra' },
+    { id: 'traslado_int', label: 'Traslado internacional', cls: 'tri' },
+    { id: 'hospedaje', label: 'Hospedaje', cls: 'hos' }
+  ];
+  function type(id) { return TYPES.filter(function (t) { return t.id === id; })[0] || TYPES[1]; }
   var DOW = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   var DOW_S = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
@@ -25,7 +38,7 @@
   }
   function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function dayInfo(s) { var d = new Date(s + 'T12:00:00'); return { dow: DOW[d.getDay()], dowS: DOW_S[d.getDay()], day: d.getDate() }; }
-  function slot(id) { return SLOTS.filter(function (s) { return s.id === id; })[0]; }
+  function slot(id) { return TEAM_SLOTS.filter(function (s) { return s.id === id; })[0]; }
   function slotLabel(id) { var s = slot(id); return s ? s.a + ' a ' + s.b : id; }
   function longDate(s) { var i = dayInfo(s); return i.dow + ' ' + i.day + ' de noviembre'; }
   function isPast(fecha, franja) {
@@ -55,7 +68,13 @@
     return fetch(API, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); }).then(check);
   }
+  // La hoja de Google a veces convierte "10-12" en fecha (10 dic): lo devolvemos a su forma original.
+  function fixSlot(f) {
+    var m = /^\d{4}-(\d{2})-(\d{2})T/.exec(String(f || ''));
+    return m ? m[2] + '-' + m[1] : f;
+  }
   function check(res) {
+    if (res && res.items) res.items.forEach(function (r) { r.franja = fixSlot(r.franja); });
     if (!res || !res.ok) { var e = new Error((res && res.error) || 'No pudimos conectar con la agenda.'); e.code = res && res.code; throw e; }
     return res;
   }
@@ -120,7 +139,8 @@
   };
 
   /* Calendario: days[], cellFn(fecha, slot) -> HTML del bloque */
-  function renderGrid(el, days, cellFn, state) {
+  function renderGrid(el, days, cellFn, state, slots) {
+    slots = slots || SLOTS;
     var sel = state.day && days.indexOf(state.day) >= 0 ? state.day : days[0];
     state.day = sel;
     var h = '<div class="grid" style="--cols:' + days.length + '"><div class="hd corner">Horario</div>';
@@ -128,7 +148,7 @@
       var i = dayInfo(d);
       h += '<div class="hd' + (d === sel ? ' on' : '') + '"><div class="dow">' + i.dowS + '</div><div class="day">' + i.day + '</div><div class="mon">nov</div></div>';
     });
-    SLOTS.forEach(function (s) {
+    slots.forEach(function (s) {
       h += '<div class="time">' + s.a + '<small>a ' + s.b + '</small></div>';
       days.forEach(function (d) { h += '<div class="cell' + (d === sel ? ' on' : '') + '">' + cellFn(d, s) + '</div>'; });
     });
@@ -146,7 +166,7 @@
   function closeDialog(dlg) { if (typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open'); }
 
   window.SD = {
-    cfg: CFG, api: api, SLOTS: SLOTS, range: range, dayInfo: dayInfo, slotLabel: slotLabel, longDate: longDate,
+    cfg: CFG, api: api, SLOTS: SLOTS, TEAM_SLOTS: TEAM_SLOTS, TYPES: TYPES, type: type, range: range, dayInfo: dayInfo, slotLabel: slotLabel, longDate: longDate,
     isPast: isPast, esc: esc, toast: toast, demoBanner: demoBanner, ICON: ICON, renderGrid: renderGrid,
     renderDayPicker: renderDayPicker, openDialog: openDialog, closeDialog: closeDialog
   };

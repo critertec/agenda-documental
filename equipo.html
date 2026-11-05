@@ -20,19 +20,22 @@
       <span class="chip" id="lockChip">Vista interna · Equipo</span>
     </div>
     <h1>Agenda del documental</h1>
-    <p class="lead">Entrevistas y jornadas de grabación del 16 al 28 de noviembre. Esta vista tiene datos personales: no compartas el enlace fuera del equipo.</p>
+    <p class="lead">Entrevistas, jornadas, traslados y hospedaje del 15 al 28 de noviembre. Esta vista tiene datos personales: no compartas el enlace fuera del equipo.</p>
   </div>
 </header>
 
 <main class="wrap" id="app" hidden>
   <div class="toolbar">
     <div class="seg" role="group" aria-label="Semana" id="weekSeg">
-      <button type="button" data-w="1">16 – 21 nov</button>
+      <button type="button" data-w="1">15 – 21 nov</button>
       <button type="button" data-w="2">23 – 28 nov</button>
     </div>
     <div class="legend">
       <span><i class="sw busy"></i>Entrevista</span>
       <span><i class="sw jor"></i>Jornada de grabación</span>
+      <span><i class="sw tra"></i>Traslado</span>
+      <span><i class="sw tri"></i>Traslado internacional</span>
+      <span><i class="sw hos"></i>Hospedaje</span>
       <span><i class="sw free"></i>Libre</span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -96,9 +99,9 @@
     <div class="m-body">
       <div class="fgrid">
         <div class="field"><label for="e-tipo">Tipo</label>
-          <select id="e-tipo" name="tipo"><option value="entrevista">Entrevista</option><option value="jornada">Jornada de grabación</option></select></div>
+          <select id="e-tipo" name="tipo"></select></div>
         <div class="field"><label for="e-entidad">Entidad</label><input id="e-entidad" name="entidad" list="entidades" required maxlength="120">
-          <datalist id="entidades"><option>MINERD</option><option>INFOTEP</option><option>INDOTEL</option><option>Promipyme</option><option>BID</option><option>Critertec</option></datalist></div>
+          <datalist id="entidades"><option>MINERD</option><option>INFOTEP</option><option>INDOTEL</option><option>Promipyme</option><option>BID</option><option>Critertec</option><option>PREPARA</option><option>Secundaria +14</option><option>Satélite</option><option>Equipo Soy Digital</option><option>Réplica</option><option>MINERD Docentes</option><option>Backup</option></datalist></div>
         <div class="field"><label for="e-plan">Plan <span class="opt">(entrevistas)</span></label>
           <select id="e-plan" name="plan"><option value="">Sin plan</option><option value="A">Plan A</option><option value="B">Plan B</option></select></div>
         <div class="field"></div>
@@ -129,7 +132,7 @@
 <script src="app.js"></script>
 <script>
 (function () {
-  var W1 = SD.range('2026-11-16', '2026-11-21', true), W2 = SD.range('2026-11-23', '2026-11-28', true);
+  var W1 = ['2026-11-15'].concat(SD.range('2026-11-16', '2026-11-21', true)), W2 = SD.range('2026-11-23', '2026-11-28', true);
   var ALL = W1.concat(W2);
   var state = { week: '1', view: 'cal', day: null, items: [], editing: null };
   var KEY = '';
@@ -183,10 +186,10 @@
     var r = find(fecha, s.id);
     if (!r) return '<button type="button" class="slot free" data-f="' + fecha + '" data-s="' + s.id + '" aria-label="Agregar en ' + SD.longDate(fecha) + ', ' + SD.slotLabel(s.id) + '"><span class="cta">' + SD.ICON.plus + 'Agregar</span></button>';
     var person = [r.nombre, r.apellido].filter(Boolean).join(' ');
-    var cls = r.tipo === 'jornada' ? 'slot jor' : 'slot busy team';
-    var k = r.tipo === 'jornada' ? 'Jornada' : 'Entrevista' + (r.origen === 'publico' ? ' · web' : '') + (r.plan ? '<span class="pl">PLAN ' + SD.esc(r.plan) + '</span>' : '');
+    var T = SD.type(r.tipo), cls = 'slot ' + T.cls;
+    var k = SD.esc(T.label) + (r.tipo === 'entrevista' && r.origen === 'publico' ? ' · web' : '') + (r.plan ? '<span class="pl">PLAN ' + SD.esc(r.plan) + '</span>' : '');
     return '<button type="button" class="' + cls + '" data-id="' + SD.esc(r.id) + '"><span class="k">' + k + '</span><span class="t">' + SD.esc(r.entidad) + '</span>' +
-      (r.actividad && r.tipo === 'jornada' ? '<span class="s">' + SD.esc(r.actividad) + '</span>' : '') +
+      (r.actividad && r.tipo !== 'entrevista' ? '<span class="s">' + SD.esc(r.actividad) + '</span>' : '') +
       (person ? '<span class="s">' + SD.esc(person) + '</span>' : '') +
       (r.telefono ? '<span class="s">' + SD.esc(r.telefono) + '</span>' : '') + '</button>';
   }
@@ -197,7 +200,7 @@
     $('calWrap').hidden = state.view !== 'cal'; $('listWrap').hidden = state.view !== 'list';
     $('weekSeg').style.visibility = state.view === 'cal' ? 'visible' : 'hidden';
     if (state.view === 'cal') {
-      SD.renderGrid(cal, days, cell, state);
+      SD.renderGrid(cal, days, cell, state, SD.TEAM_SLOTS);
       SD.renderDayPicker($('daysM'), days, state, function (d) { state.day = d; render(); });
     } else renderList();
   }
@@ -210,8 +213,8 @@
       rows.map(function (r) {
         var i = SD.dayInfo(r.fecha);
         return '<tr data-id="' + SD.esc(r.id) + '"><td>' + i.dowS + ' ' + i.day + '</td><td style="white-space:nowrap">' + SD.esc(SD.slotLabel(r.franja)) + '</td><td>' +
-          (r.tipo === 'jornada' ? '<span class="tag jor">Jornada</span>' : '<span class="tag ent">Entrevista</span>') + (r.plan ? ' <span class="tag ' + (r.plan === 'A' ? 'pa' : 'pb') + '">Plan ' + SD.esc(r.plan) + '</span>' : '') + (r.origen === 'publico' ? ' <span class="tag pub">Web</span>' : '') +
-          '</td><td><strong>' + SD.esc(r.entidad) + '</strong>' + (r.direccion_minerd ? '<br><small>' + SD.esc(r.direccion_minerd) + '</small>' : '') + (r.actividad && r.tipo === 'jornada' ? '<br><small>' + SD.esc(r.actividad) + '</small>' : '') +
+          '<span class="tag t-' + SD.esc(SD.type(r.tipo).id) + '">' + SD.esc(SD.type(r.tipo).label) + '</span>' + (r.plan ? ' <span class="tag ' + (r.plan === 'A' ? 'pa' : 'pb') + '">Plan ' + SD.esc(r.plan) + '</span>' : '') + (r.origen === 'publico' ? ' <span class="tag pub">Web</span>' : '') +
+          '</td><td><strong>' + SD.esc(r.entidad) + '</strong>' + (r.direccion_minerd ? '<br><small>' + SD.esc(r.direccion_minerd) + '</small>' : '') + (r.actividad && r.tipo !== 'entrevista' ? '<br><small>' + SD.esc(r.actividad) + '</small>' : '') +
           '</td><td>' + SD.esc([r.nombre, r.apellido].filter(Boolean).join(' ')) + (r.cargo ? '<br><small>' + SD.esc(r.cargo) + '</small>' : '') +
           '</td><td style="white-space:nowrap">' + (r.telefono ? '<a href="tel:' + SD.esc(r.telefono.replace(/[^\d+]/g, '')) + '">' + SD.esc(r.telefono) + '</a>' : '') +
           '</td><td>' + (r.email ? '<a href="mailto:' + SD.esc(r.email) + '">' + SD.esc(r.email) + '</a>' : '') + '</td><td>' + SD.esc(r.lugar) + '</td></tr>';
@@ -220,7 +223,8 @@
 
   /* ---------- Modal ---------- */
   $('e-fecha').innerHTML = ALL.map(function (d) { return '<option value="' + d + '">' + SD.longDate(d) + '</option>'; }).join('');
-  $('e-franja').innerHTML = SD.SLOTS.map(function (s) { return '<option value="' + s.id + '">' + SD.slotLabel(s.id) + '</option>'; }).join('');
+  $('e-tipo').innerHTML = SD.TYPES.map(function (t) { return '<option value="' + t.id + '">' + t.label + '</option>'; }).join('');
+  $('e-franja').innerHTML = SD.TEAM_SLOTS.map(function (s) { return '<option value="' + s.id + '">' + SD.slotLabel(s.id) + '</option>'; }).join('');
   var FIELDS = ['tipo', 'plan', 'entidad', 'fecha', 'franja', 'actividad', 'nombre', 'apellido', 'cargo', 'direccion_minerd', 'telefono', 'email', 'lugar', 'notas'];
 
   function openEditor(item, fecha, franja) {
